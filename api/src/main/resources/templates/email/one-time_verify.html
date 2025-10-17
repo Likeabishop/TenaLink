@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8" />
+    <style>
+        body { font-family: Arial, sans-serif; color: #333; }
+        .btn {
+            display: inline-block;
+            margin-top: 10px;
+            padding: 10px 20px;
+            background-color: #2E86C1;
+            color: #fff;
+            text-decoration: none;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h2 th:text="|Welcome to TenaLink, ${username} !|"></h2>
+    <p>Thank you for choosing to use our system and we hope everything will be up to your standards and expectations. Please verify your account by clicking the link below:</p>
+    <a th:href="${verificationLink}" class="btn">Verify Account</a>
+    <p>If you did not request this, please ignore this email.</p>
+    <hr/>
+    <small>&copy; 2025 Your Company. All rights reserved.</small>
+</body>
+</html>
