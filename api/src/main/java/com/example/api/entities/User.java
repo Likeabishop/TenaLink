@@ -1,7 +1,6 @@
 package com.example.api.entities;
 
 import java.time.LocalDateTime;
-import java.util.Date;
 import java.util.UUID;
 
 import org.hibernate.annotations.CreationTimestamp;
@@ -18,13 +17,12 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.PreRemove;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 @NoArgsConstructor
 @AllArgsConstructor
@@ -34,7 +32,6 @@ import lombok.Setter;
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    @Column(name = "userId")
     private UUID userId;
 
     @Column(nullable = false)
@@ -58,6 +55,14 @@ public class User {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false) 
     private Role role;
+
+    // SUPER_ADMIN users have null organization (platform-wide)
+    // ADMIN users own an organization  
+    // USER users belong to an organization
+
+    @ManyToOne // Each client (ADMIN) owns an organization
+    @JoinColumn(name = "organization_id", referencedColumnName = "organizationId", nullable = true)
+    private Organization organization;
 
     @CreationTimestamp
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")

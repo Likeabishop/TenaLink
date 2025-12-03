@@ -15,7 +15,7 @@ public interface ChatRoomRepository extends JpaRepository<ChatRoom, UUID> {
     
     // Find rooms for a specific user
     @Query("SELECT cr FROM ChatRoom cr JOIN cr.participants p WHERE p.userId = :userId")
-    List<ChatRoom> findRoomByUserId(@Param("userId") UUID userId);
+    List<ChatRoom> findRoomsByUserId(@Param("userId") UUID userId);
 
     // Find property-specific tenant room
     @Query("SELECT cr FROM ChatRoom cr WHERE cr.organization.organizationId = : orgId AND cr.type = 'PROPERTY_TENANTS'")

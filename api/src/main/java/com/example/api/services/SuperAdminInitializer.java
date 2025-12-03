@@ -42,6 +42,8 @@ public class SuperAdminInitializer {
         superAdmin.setSurname("Admin");
         superAdmin.setRole(Role.SUPER_ADMIN);
         superAdmin.setStatus(UserStatus.IS_ACTIVE);
+        superAdmin.setCreatedBy("system");
+        superAdmin.setIdentificationNumber("0000000000000");
 
         userRepository.save(superAdmin);
     }

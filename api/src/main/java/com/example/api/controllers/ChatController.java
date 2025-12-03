@@ -3,6 +3,9 @@ package com.example.api.controllers;
 import java.util.List;
 import java.util.UUID;
 
+import org.springframework.messaging.handler.annotation.DestinationVariable;
+import org.springframework.messaging.handler.annotation.MessageMapping;
+import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -45,7 +48,7 @@ public class ChatController {
     @SendTo("/topic/chat/{roomId}")
     public ChatMessageDTO sendMessage(
         @DestinationVariable UUID roomId,
-        @Payload SendMessageRequest request,
+        @RequestBody SendMessageRequest request,
         @AuthenticationPrincipal User user) {
 
             ChatMessage message = chatService.sendMessage(
@@ -54,7 +57,14 @@ public class ChatController {
                 request.getContent(), 
                 MessageType.TEXT);
 
-            return new ChatMessageDTO(message);
+            return new ChatMessageDTO(
+                message.getMessageId(), 
+                message.getContent(), 
+                message.getMessageType(), 
+                message.getSender(), 
+                message.getCreatedDate(), 
+                message.isRead()
+            );
     }
 
     @PostMapping("/rooms/{roomId}/messages")
@@ -66,6 +76,16 @@ public class ChatController {
                 roomId, 
                 user.getUserId(), 
                 request.getContent(), 
-                MessageType.TEXT);
+                MessageType.TEXT
+            );
+
+            return new ChatMessageDTO(
+                message.getMessageId(), 
+                message.getContent(), 
+                message.getMessageType(), 
+                message.getSender(), 
+                message.getCreatedDate(), 
+                message.isRead()
+            );
         }
 }

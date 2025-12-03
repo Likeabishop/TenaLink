@@ -12,12 +12,12 @@ import com.example.api.entities.ChatMessage;
 import com.example.api.entities.ChatRoom;
 
 public interface ChatMessageRepository extends JpaRepository<ChatMessage, UUID>{
-    List<ChatMessage> findByChatRoomOrderBySentAtAsc(ChatRoom chatRoom);
+    List<ChatMessage> findByChatRoomOrderByCreatedDateAsc(ChatRoom chatRoom);
 
-    @Query("SELECT cm FROM ChatMessage cm WHERE cm.chatRoom.roomId = :roomId ORDER BY cm.sentAt DESC")
+    @Query("SELECT cm FROM ChatMessage cm WHERE cm.chatRoom.roomId = :roomId ORDER BY cm.createdDate DESC")
     List<ChatMessage> findLatestMessages(@Param("roomId") UUID roomId, Pageable pageable);
 
     // Count unread messages for a user in a room
-    @Query("SELECT COUNT(cm) FROM ChatMessage cm WHERE cm.chatRoom.roomId = : roomId AND cm.sender.userId != :userId AND cm.isRead = false")
+    @Query("SELECT COUNT(cm) FROM ChatMessage cm WHERE cm.chatRoom.roomId = :roomId AND cm.sender.userId != :userId AND cm.isRead = false")
     long countUnreadMessage(@Param("roomId") UUID roomId, @Param("userId") UUID userId);
 }

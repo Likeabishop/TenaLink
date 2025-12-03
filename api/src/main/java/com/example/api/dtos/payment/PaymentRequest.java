@@ -1,4 +1,4 @@
-package com.example.api.dtos;
+package com.example.api.dtos.payment;
 
 import java.math.BigDecimal;
 import java.util.UUID;

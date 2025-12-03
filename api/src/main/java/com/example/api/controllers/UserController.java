@@ -22,7 +22,6 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 import com.example.api.dtos.UserAdminUpdateDTO;
 import com.example.api.dtos.UserPutDTO;
-import com.example.api.dtos.UserResponseDTO;
 import com.example.api.entities.User;
 import com.example.api.services.UserService;
 
