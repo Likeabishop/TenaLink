@@ -8,7 +8,7 @@ import com.example.api.entities.enums.UserStatus;
 import lombok.Data;
 
 @Data
-public class UserResponseDTO {
+public class UserDTO {
     private UUID userId;
     private String name;
     private String middleNames;

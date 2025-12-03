@@ -21,7 +21,7 @@ import com.example.api.dtos.LoginDTO;
 import com.example.api.dtos.NewPasswordDTO;
 import com.example.api.dtos.PasswordResetRequestDTO;
 import com.example.api.dtos.RefreshTokenRequestDTO;
-import com.example.api.dtos.UserResponseDTO;
+import com.example.api.dtos.UserDTO;
 import com.example.api.entities.RefreshToken;
 import com.example.api.entities.User;
 import com.example.api.services.AuthService;
@@ -40,7 +40,7 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<UserResponseDTO> registerUser(
+    public ResponseEntity<UserDTO> registerUser(
         @RequestBody @Valid User user, 
         UriComponentsBuilder ucb) throws MessagingException {
             User savedUser = authService.createUser(user);
@@ -50,7 +50,7 @@ public class AuthController {
                 .buildAndExpand(user.getUserId())
                 .toUri();
             
-            UserResponseDTO dto = convertToDTO(savedUser);
+            UserDTO dto = convertToDTO(savedUser);
 
             return ResponseEntity.created(locationOfNewUser).body(dto);
     }
@@ -99,8 +99,8 @@ public class AuthController {
                 .build(); 
     }
 
-    private UserResponseDTO convertToDTO(User user) {
-        UserResponseDTO dto = new UserResponseDTO();
+    private UserDTO convertToDTO(User user) {
+        UserDTO dto = new UserDTO();
         dto.setStatus(user.getStatus());
         dto.setEmail(user.getEmail());
         dto.setRole(user.getRole());

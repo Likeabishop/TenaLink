@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
 import com.example.api.dtos.ChatMessageDTO;
@@ -29,18 +30,18 @@ public class ChatService {
     private final ChatRoomRepository chatRoomRepository;
     private final ChatMessageRepository chatMessageRepository;
     private final UserRepository userRepository;
-    private final SimpMessageTemplate messageTemplate;
+    private final SimpMessagingTemplate messagingTemplate;
 
     public ChatService(
         ChatRoomRepository chatRoomRepository,
         ChatMessageRepository chatMessageRepository,
         UserRepository userRepository,
-        SimpMessageTemplate messageTemplate
+        SimpMessagingTemplate messagingTemplate
     ) {
         this.chatMessageRepository = chatMessageRepository;
         this.chatRoomRepository = chatRoomRepository;
         this.userRepository = userRepository;
-        this.messageTemplate = messageTemplate;
+        this.messagingTemplate = messagingTemplate;
     }
 
     // Initialize default chat rooms for new organization
@@ -51,7 +52,6 @@ public class ChatService {
             tenantsRoom.setName(organization.getName() + " Tenants");
             tenantsRoom.setType(ChatRoomType.PROPERTY_TENANTS);
             tenantsRoom.setOrganization(organization);
-            tenantsRoom.setCreatedAt(LocalDateTime.now());
 
             // Add admin to tenants rooms
             tenantsRoom.getParticipants().add(admin);
@@ -59,7 +59,7 @@ public class ChatService {
 
             // Create support room between admin and super admins
             createAdminSupportRoom(admin);
-        }
+    }
     
     private void createAdminSupportRoom(User admin) {
         ChatRoom supportRoom = new ChatRoom();
@@ -80,11 +80,11 @@ public class ChatService {
         String content,
         MessageType messageType) {
             ChatRoom room = chatRoomRepository.findById(roomId)
-                .orElseThrow(() -> new ResourceNotFoundException("
-                Chat room not found"));
+                .orElseThrow(() -> new ResourceNotFoundException(
+                    "Chat room not found"));
 
-            User sender = userRepository.findById(senderId).orElseThrow(() -> new ResourceNotFoundException("
-                User not found"));
+            User sender = userRepository.findById(senderId).orElseThrow(() -> new ResourceNotFoundException(
+                "User not found"));
 
             // Check if sender if participant
             if (!room.getParticipants().contains(sender)) {
@@ -97,15 +97,20 @@ public class ChatService {
             message.setSender(sender);
             message.setContent(content);
             message.setMessageType(messageType);
-            message.setSentAt(LocalDateTime.now());
             message.setRead(false);
+            return message;
         }
 
     public List<ChatRoomDTO> getUserChatRooms(UUID userId) {
         List<ChatRoom> rooms = chatRoomRepository.findRoomsByUserId(userId);
         return rooms.stream()
             .map(room -> {
-                ChatRoomDTO dto = new ChatRoomDTO(room);
+                ChatRoomDTO dto = new ChatRoomDTO(
+                    room.getRoomId(),
+                    room.getName(),
+                    room.getType(),
+                    room.getParticipants()
+                );
                 // Add unread count for this user
                 dto.setUnreadCount(chatMessageRepository.countUnreadMessage(room.getRoomId(), userId));
                 return dto;
@@ -123,7 +128,7 @@ public class ChatService {
                 throw new RuntimeException("Access denied to chat room");
             }
         
-        List<ChatMessage> message = chatMessageRepository.findByChatRoomOrderBySentAtAsc(room);
+        List<ChatMessage> message = chatMessageRepository.findByChatRoomOrderByCreatedDateAsc(room);
 
         // Mark messages as read for this user
         message.stream()
@@ -147,5 +152,16 @@ public class ChatService {
             propertyRoom.getParticipants().add(user);
             chatRoomRepository.save(propertyRoom);
 
+    }
+
+    private LocalDateTime calculateLastActivity(ChatRoom room) {
+        if (room.getMessages() != null && !room.getMessages().isEmpty()) {
+            // Find the most recent message timestamp
+            return room.getMessages().stream()
+                .map(ChatMessage::getCreatedDate)
+                .max(LocalDateTime::compareTo)
+                .orElse(room.getCreatedDate());
         }
+        return room.getCreatedDate();
+    }
 }

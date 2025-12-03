@@ -16,10 +16,6 @@ import com.example.api.entities.enums.InvoiceStatus;
 @Repository
 public interface InvoiceRepository extends JpaRepository<Invoice, UUID>{
     List<Invoice> findByTenantUserIdOrderByDueDateDesc(UUID tenantId);
-
-    List<Invoice> findByTenantUserIdOrderByDueDateDesc(
-        UUID organizationId,
-        InvoiceStatus status);
     
     @Query("SELECT i FROM Invoice i WHERE i.tenant.userId = :tenantId AND i.status IN ('PENDING', 'OVERDUE', 'PARTIAL')")
     List<Invoice> findPendingInvoicesForTenant(@Param("tenantId") UUID tenantId);
