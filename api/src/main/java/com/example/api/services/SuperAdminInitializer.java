@@ -16,15 +16,21 @@ public class SuperAdminInitializer {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final String superPassword;
+    private final String superEmail;
+    private final String appName;
 
     public SuperAdminInitializer(
         UserRepository userRepository,
         PasswordEncoder passwordEncoder,
-        @Value("app.prod.super-password") String superPassword
+        @Value("app.prod.super-password") String superPassword,
+        @Value("app.super-email") String superEmail,
+        @Value("spring.application.name") String appName
     ) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.superPassword = superPassword;
+        this.superEmail = superEmail;
+        this.appName = appName;
     }
 
     @EventListener(ApplicationReadyEvent.class)
@@ -36,10 +42,10 @@ public class SuperAdminInitializer {
 
         // Create initial super admin (you)
         User superAdmin = new User();
-        superAdmin.setEmail("karabotebeila24@gmail.com");
+        superAdmin.setEmail(superEmail);
         superAdmin.setPassword(passwordEncoder.encode(superPassword));
-        superAdmin.setName("Tenalink");
-        superAdmin.setSurname("Admin");
+        superAdmin.setFirstName(appName);
+        superAdmin.setLastName(Role.SUPER_ADMIN.toString());
         superAdmin.setRole(Role.SUPER_ADMIN);
         superAdmin.setStatus(UserStatus.IS_ACTIVE);
         superAdmin.setCreatedBy("system");

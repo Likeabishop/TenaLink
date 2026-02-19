@@ -63,7 +63,7 @@ public class ChatService {
     
     private void createAdminSupportRoom(User admin) {
         ChatRoom supportRoom = new ChatRoom();
-        supportRoom.setName("Support - " + admin.getName());
+        supportRoom.setName("Support - " + admin.getFirstName());
         supportRoom.setType(ChatRoomType.ADMIN_SUPPPORT);
         supportRoom.getParticipants().add(admin);
 

@@ -40,12 +40,7 @@ public class SecurityConfig {
             .authorizeHttpRequests((authorize) -> authorize
                 .requestMatchers(HttpMethod.OPTIONS, "/auth/**").permitAll()
                 .requestMatchers(
-                    "/auth/register", 
-                    "/auth/verify-email",
-                    "/auth/request-password-reset",
-                    "/auth/reset-password/**",
-                    "auth/refresh-token",
-                    "/auth/login").permitAll()
+                    "/auth/**").permitAll()
                 .anyRequest().authenticated()            
             )
         .oauth2ResourceServer((oauth2) -> oauth2

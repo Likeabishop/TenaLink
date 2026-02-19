@@ -1,5 +1,6 @@
 package com.example.api.services;
 
+import java.net.URI;
 import java.time.LocalDateTime;
 import java.util.Base64;
 import java.util.Date;
@@ -15,8 +16,11 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import com.example.api.dtos.NewPasswordDTO;
+import com.example.api.dtos.UserCreationRequest;
+import com.example.api.dtos.UserResponseDTO;
 import com.example.api.entities.RefreshToken;
 import com.example.api.entities.User;
 import com.example.api.entities.enums.Role;
@@ -58,56 +62,90 @@ public class AuthService {
     }
 
     @Transactional
-    public User createUser(User user) throws MessagingException {
+    public ResponseEntity<UserResponseDTO> createTenant(UserCreationRequest user, UriComponentsBuilder ucb) throws MessagingException {
         User existingUser = getUser(user.getEmail());
 
         if (existingUser != null) {
             throw new RuntimeException("User already exists");
         }
 
-        user.setPassword(passwordEncoder.encode(user.getPassword()));
-        user.setVerificationToken(TokenUtils.generateToken());
-        user.setVerificationTokenExpiry(TokenUtils.generateExpiryDate());
+        User newUser = new User();
 
+        newUser.setFirstName(user.getFirstname());
+        newUser.setMiddleNames(user.getMiddleNames());
+        newUser.setLastName(user.getLastname());
+        newUser.setRole(Role.TENANT);
+        newUser.setEmail(user.getEmail());
+        newUser.setIdentificationNumber(user.getIdentificationNumber());
+        newUser.setPassword(passwordEncoder.encode(user.getPassword()));
+        newUser.setVerificationToken(TokenUtils.generateToken());
+        newUser.setVerificationTokenExpiry(TokenUtils.generateExpiryDate());
+        newUser.setStatus(UserStatus.IS_UNACTIVE);
+        newUser.setCreatedBy(user.getCreatedBy());
+
+        User savedUser = userRepository.save(newUser);
+
+        URI locationOfNewUser = ucb
+            .path("auth/register/{userId}")
+            .buildAndExpand(savedUser.getUserId())
+            .toUri();
+            
         sendEmailToClient(
-            user.getEmail(),
-            user.getName() + " " + user.getSurname(),
+            savedUser.getEmail(),
+            savedUser.getFirstName() + " " + savedUser.getLastName(),
             "Verification for New User Email",
             "first_time_verify",
-            apiUrl + "/auth/verify-email?verificationToken=" + user.getVerificationToken());
-        return userRepository.save(user);
+            apiUrl + "/auth/verify-email?verificationToken=" + savedUser.getVerificationToken());
+
+            UserResponseDTO dto = convertToDTO(savedUser);
+        
+        return ResponseEntity.created(locationOfNewUser).body(dto);
     }
 
     @Transactional
-    public User registerClientAdmin(User user) throws MessagingException {
+    public ResponseEntity<UserResponseDTO> registerAdmin(UserCreationRequest user, UriComponentsBuilder ucb) throws MessagingException {
         User existingUser = getUser(user.getEmail());
 
         if (existingUser != null) {
             throw new RuntimeException("User already exists");
         }
+        
+        User newUser = new User();
 
-        user.setRole(Role.ADMIN);
-        user.setPassword(passwordEncoder.encode(user.getPassword()));
-        user.setVerificationToken(TokenUtils.generateToken());
-        user.setVerificationTokenExpiry(TokenUtils.generateExpiryDate());
-        user.setStatus(UserStatus.IS_UNACTIVE); // New status
+        newUser.setFirstName(user.getFirstname());
+        newUser.setMiddleNames(user.getMiddleNames());
+        newUser.setLastName(user.getLastname());
+        newUser.setRole(Role.ADMIN);
+        newUser.setPassword(passwordEncoder.encode(user.getPassword()));
+        newUser.setVerificationToken(TokenUtils.generateToken());
+        newUser.setVerificationTokenExpiry(TokenUtils.generateExpiryDate());
+        newUser.setStatus(UserStatus.IS_UNACTIVE); // New status
+        newUser.setCreatedBy(user.getCreatedBy());
 
-        User savedUser = userRepository.save(user);
+        User savedUser = userRepository.save(newUser);
 
         sendEmailToClient(
-            user.getEmail(),
-            user.getName() + " " + user.getSurname(),
+            savedUser.getEmail(),
+            savedUser.getFirstName() + " " + savedUser.getLastName(),
             "Verification for New User Email",
             "one-time_verify",
-            apiUrl + "/auth/verify-email?verificationToken=" + user.getVerificationToken());
+            apiUrl + "/auth/verify-email?verificationToken=" + savedUser.getVerificationToken());
         
         notifySuperAdminNewClient(savedUser);
-        return savedUser;
+
+        URI locationOfNewUser = ucb
+                .path("auth/register-admin/{userId}")
+                .buildAndExpand(savedUser.getUserId())
+                .toUri();
+            
+        UserResponseDTO dto = convertToDTO(savedUser);
+
+        return ResponseEntity.created(locationOfNewUser).body(dto);
     }
 
     @Transactional
     public Map<String, String> login(String email, String rawPassword) {
-        System.out.println("email: " + email);
+        
         User user = getUser(email);
 
         if (user == null || !passwordEncoder.matches(rawPassword, user.getPassword()) || user == null) {
@@ -167,7 +205,7 @@ public class AuthService {
 
         sendEmailToClient(
             savedUser.getEmail(),
-            savedUser.getName() + " " + savedUser.getSurname(),
+            savedUser.getFirstName() + " " + savedUser.getLastName(),
             "Reset Password Request",
             "password_reset",
             clientUrl + "/reset-password?resetPasswordToken=" + user.getResetPasswordToken()
@@ -181,8 +219,7 @@ public class AuthService {
         NewPasswordDTO newPasswordDTO,
         String resetPasswordToken) throws BadRequestException {
             User user = userRepository.findByResetPasswordToken(resetPasswordToken);
-            System.out.println("newPasswordDTO: " + newPasswordDTO.getPassword());
-            System.out.println("resetPasswordToken: " + resetPasswordToken);
+            
             if (user == null) {
                 throw new ResourceNotFoundException("Invalid password reset token");
             }
@@ -278,9 +315,9 @@ public class AuthService {
 
         for (User superAdmin : superAdmins) {
             Map<String, Object> variables = Map.of(
-                "clientName", clientAdmin.getName() + " " + clientAdmin.getSurname(),
+                "clientName", clientAdmin.getFirstName() + " " + clientAdmin.getLastName(),
                 "clientEmail", clientAdmin.getEmail(),
-                "businessName", clientAdmin.getName(),
+                "businessName", clientAdmin.getFirstName(),
                 "approvalLink", apiUrl + "/super-admin/clients/" + clientAdmin.getUserId() + "/approve"
             );
 
@@ -320,5 +357,17 @@ public class AuthService {
                     subject,
                     templateName,
                     variables);
+    }
+
+    private UserResponseDTO convertToDTO(User user) {
+        UserResponseDTO dto = new UserResponseDTO();
+        dto.setStatus(user.getStatus());
+        dto.setEmail(user.getEmail());
+        dto.setRole(user.getRole());
+        dto.setMiddleNames(user.getMiddleNames());
+        dto.setName(user.getFirstName());
+        dto.setSurname(user.getLastName());
+
+        return dto;
     }
 }

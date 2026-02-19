@@ -35,13 +35,13 @@ public class User {
     private UUID userId;
 
     @Column(nullable = false)
-    private String name;
+    private String firstName;
 
     @Column(nullable = true)
     private String middleNames;
 
     @Column(nullable = false)
-    private String surname;
+    private String lastName;
 
     @Column(nullable = false, unique = true, length = 13)
     private String identificationNumber;
