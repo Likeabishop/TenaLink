@@ -11,9 +11,9 @@ import lombok.Data;
 
 @Data
 public class UserAdminUpdateDTO {
-    private String name;
+    private String firstName;
     private String middleNames;
-    private String surname;
+    private String lastName;
     private String identificationNumber;
     private String email;
     private String password;

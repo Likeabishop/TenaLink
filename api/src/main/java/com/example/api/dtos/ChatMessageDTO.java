@@ -32,7 +32,7 @@ public class ChatMessageDTO {
         if (message.getSender() != null) {
             this.sender = new User();
             this.sender.setUserId(message.getSender().getUserId());
-            this.sender.setName(message.getSender().getName());
+            this.sender.setFirstName(message.getSender().getFirstName());
             this.sender.setEmail(message.getSender().getEmail());
             this.sender.setRole(message.getSender().getRole());
             // Add other user fields as needed

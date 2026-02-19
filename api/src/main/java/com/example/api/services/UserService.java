@@ -76,7 +76,7 @@ public class UserService {
         User user = findUser(uuid);
         if (user != null) {
             user.setMiddleNames(userUpdate.getMiddleNames());
-            user.setName(userUpdate.getName());
+            user.setFirstName(userUpdate.getName());
             user.setUpdatedBy(currentUser.toString());
 
             User savedUser = userRepository.save(user);
@@ -95,19 +95,19 @@ public class UserService {
         User user = findUser(uuid);
         if (user != null) {
             user.setMiddleNames(userUpdate.getMiddleNames());
-            user.setName(userUpdate.getName());
+            user.setFirstName(userUpdate.getFirstName());
             user.setUpdatedBy(currentUser.toString());
             user.setEmail(userUpdate.getEmail());
             user.setIdentificationNumber(userUpdate.getIdentificationNumber());
             user.setRole(userUpdate.getRole());
-            user.setSurname(userUpdate.getSurname());
+            user.setLastName(userUpdate.getLastName());
 
             User savedUser = userRepository.save(user);
             
             sendEmail(
             user.getEmail(), 
             user.getResetPasswordToken(),
-            user.getName() + " " + user.getSurname(),
+            user.getFirstName() + " " + user.getLastName(),
             "Changes Implemented on Account Profile Notice",
             "tenant_notification_of_changes");
             return savedUser;
@@ -135,7 +135,7 @@ public class UserService {
         sendEmail(
             user.getEmail(), 
             user.getResetPasswordToken(),
-            user.getName() + " " + user.getSurname(),
+            user.getFirstName() + " " + user.getLastName(),
             "Deleted Account Notice",
             "delete_notify"
             );
@@ -161,7 +161,7 @@ public class UserService {
         sendEmail(
             user.getEmail(), 
             user.getResetPasswordToken(),
-            user.getName() + " " + user.getSurname(),
+            user.getFirstName() + " " + user.getLastName(),
             "Suspended Account Notice",
             "suspend_notify");
 
